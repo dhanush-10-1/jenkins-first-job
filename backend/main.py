@@ -1,26 +1,33 @@
 """CI/CD Pipeline Manager — FastAPI Application."""
 import os
+import asyncio
+import time
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from database import init_db, AsyncSessionLocal
 from routers import pipelines, executions, webhooks
 from engine.scheduler import scheduler
-import asyncio
+from engine.simulators import start_simulators
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup: create tables. Shutdown: cleanup."""
     await init_db()
     print("✅ Database tables created / verified")
-    
-    # Start Background Task Workers (No mock traffic, purely real operations)
+
+    # Start Background Task Workers
     asyncio.create_task(scheduler.poll_pending_jobs(AsyncSessionLocal))
-    print("✅ Real Database Scheduler active (Waiting for real Webhooks)")
-    
+    print("✅ Real Database Scheduler active")
+
+    # Start real-world simulators (random job arrivals & worker completion)
+    await start_simulators(AsyncSessionLocal)
+    print("✅ Real-world simulators active (random webhook events every 20-45s)")
+
     yield
     print("👋 Shutting down")
 
@@ -69,9 +76,6 @@ async def serve_frontend():
 if os.path.isdir(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
-import asyncio
-import time
-from fastapi.responses import StreamingResponse
 
 @app.get("/api/events")
 async def sse_events():

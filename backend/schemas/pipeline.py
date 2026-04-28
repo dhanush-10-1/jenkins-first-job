@@ -1,5 +1,4 @@
 """Pydantic schemas for Pipeline CRUD operations."""
-import uuid
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -29,7 +28,7 @@ class PipelineUpdate(BaseModel):
 # ── Response schemas ───────────────────────────────────────
 
 class PipelineResponse(BaseModel):
-    id: uuid.UUID
+    id: str
     name: str
     description: str | None
     yaml_content: str | None
@@ -44,7 +43,7 @@ class PipelineResponse(BaseModel):
 
 
 class PipelineListItem(BaseModel):
-    id: uuid.UUID
+    id: str
     name: str
     description: str | None
     repo_url: str | None

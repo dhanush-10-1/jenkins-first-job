@@ -1,5 +1,4 @@
 """Pydantic schemas for Execution and Job resources."""
-import uuid
 from datetime import datetime
 from pydantic import BaseModel, Field
 
@@ -12,8 +11,8 @@ class ExecutionCreate(BaseModel):
 
 
 class ExecutionResponse(BaseModel):
-    id: uuid.UUID
-    pipeline_id: uuid.UUID
+    id: str
+    pipeline_id: str
     status: str
     trigger_type: str
     trigger_ref: str | None
@@ -35,8 +34,8 @@ class ExecutionDetail(ExecutionResponse):
 # ── Job schemas ────────────────────────────────────────────
 
 class JobResponse(BaseModel):
-    id: uuid.UUID
-    execution_id: uuid.UUID
+    id: str
+    execution_id: str
     stage_name: str
     stage_order: int
     job_type: str

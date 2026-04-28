@@ -7,6 +7,7 @@ class WorkerPool:
         self.register("worker-py-1", 4, 16, ["python", "bash"])
         self.register("worker-js-1", 4, 16, ["javascript", "bash"])
         self.register("worker-general-1", 2, 8, ["python", "javascript", "bash"])
+        self.register("worker-docker-1", 4, 16, ["python", "javascript", "bash", "docker"])
 
     def register(self, worker_id: str, cpu: int, memory: int, supported_languages: List[str] = None):
         self.workers[worker_id] = {

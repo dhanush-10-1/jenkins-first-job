@@ -2,7 +2,6 @@
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import String, Text, DateTime, ForeignKey, Integer, Float
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
@@ -10,11 +9,11 @@ from database import Base
 class Job(Base):
     __tablename__ = "jobs"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    id: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
     )
-    execution_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("executions.id", ondelete="CASCADE"), index=True
+    execution_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("executions.id", ondelete="CASCADE"), index=True
     )
     stage_name: Mapped[str] = mapped_column(String(128), nullable=False)
     stage_order: Mapped[int] = mapped_column(Integer, default=0)

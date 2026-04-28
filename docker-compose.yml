@@ -24,6 +24,7 @@ services:
     volumes:
       - ./backend:/app
       - ./index.html:/app/static/index.html:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       db:
         condition: service_healthy

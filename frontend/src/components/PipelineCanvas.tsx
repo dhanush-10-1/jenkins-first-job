@@ -1,17 +1,10 @@
-import React, { useCallback } from 'react';
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
-  Node,
-  Edge,
-  Connection,
-  addEdge,
-  applyNodeChanges,
-  applyEdgeChanges,
-  NodeChange,
-  EdgeChange,
+  BackgroundVariant
 } from 'reactflow';
+import type { Node, Edge, Connection, NodeChange, EdgeChange } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 interface PipelineCanvasProps {
@@ -31,6 +24,11 @@ export function PipelineCanvas({
   onConnect,
   nodeTypes
 }: PipelineCanvasProps) {
+  const defaultEdgeOptions = {
+    style: { stroke: 'rgba(255, 255, 255, 0.2)', strokeWidth: 2 },
+    animated: true,
+  };
+
   return (
     <div className="react-flow-wrapper" style={{ width: '100%', height: '100%' }}>
       <ReactFlow
@@ -40,11 +38,16 @@ export function PipelineCanvas({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
         fitView
       >
-        <Background />
-        <Controls />
-        <MiniMap />
+        <Background variant={BackgroundVariant.Dots} gap={24} size={2} color="rgba(255, 255, 255, 0.05)" />
+        <Controls style={{ background: 'rgba(24, 24, 27, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)', fill: '#fff' }} />
+        <MiniMap 
+          nodeColor={(n: any) => n.type === 'stageNode' ? '#3b82f6' : '#fff'}
+          maskColor="rgba(0,0,0,0.4)"
+          style={{ background: 'rgba(24, 24, 27, 0.8)', border: '1px solid rgba(255, 255, 255, 0.1)' }}
+        />
       </ReactFlow>
     </div>
   );

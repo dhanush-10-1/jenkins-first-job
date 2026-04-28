@@ -1,5 +1,4 @@
 """Pipeline CRUD router."""
-import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,7 +28,7 @@ async def list_pipelines(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{pipeline_id}", response_model=PipelineResponse)
-async def get_pipeline(pipeline_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_pipeline(pipeline_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Pipeline).where(Pipeline.id == pipeline_id))
     pipeline = result.scalar_one_or_none()
     if not pipeline:
@@ -39,7 +38,7 @@ async def get_pipeline(pipeline_id: uuid.UUID, db: AsyncSession = Depends(get_db
 
 @router.put("/{pipeline_id}", response_model=PipelineResponse)
 async def update_pipeline(
-    pipeline_id: uuid.UUID, data: PipelineUpdate, db: AsyncSession = Depends(get_db)
+    pipeline_id: str, data: PipelineUpdate, db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(Pipeline).where(Pipeline.id == pipeline_id))
     pipeline = result.scalar_one_or_none()
@@ -56,7 +55,7 @@ async def update_pipeline(
 
 
 @router.delete("/{pipeline_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_pipeline(pipeline_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def delete_pipeline(pipeline_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Pipeline).where(Pipeline.id == pipeline_id))
     pipeline = result.scalar_one_or_none()
     if not pipeline:

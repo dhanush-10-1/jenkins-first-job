@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { PipelineCanvas } from './components/PipelineCanvas';
 import { YamlEditor } from './components/YamlEditor';
 import { yamlToGraph, graphToYaml } from './lib/sync';
 import { StageNode } from './components/CustomNodes';
-import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange } from 'reactflow';
+import { addEdge, applyNodeChanges, applyEdgeChanges } from 'reactflow';
+import type { Node, Edge, Connection, NodeChange, EdgeChange } from 'reactflow';
 import './index.css';
 
 import { Dashboard } from './components/Dashboard';
@@ -40,17 +41,32 @@ function App() {
   const onNodesChange = useCallback((changes: NodeChange[]) => {
     setNodes((nds) => {
       const updated = applyNodeChanges(changes, nds);
+      if (changes.some(c => c.type === 'remove')) {
+        // structural change -> update yaml
+        setYamlValue(graphToYaml(updated, edges));
+      }
       return updated;
     });
-  }, []);
+  }, [edges]);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
-    setEdges((eds) => applyEdgeChanges(changes, eds));
-  }, []);
+    setEdges((eds) => {
+      const updated = applyEdgeChanges(changes, eds);
+      if (changes.some(c => c.type === 'remove')) {
+        // structural change -> update yaml
+        setYamlValue(graphToYaml(nodes, updated));
+      }
+      return updated;
+    });
+  }, [nodes]);
 
   const onConnect = useCallback((connection: Connection) => {
-    setEdges((eds) => addEdge(connection, eds));
-  }, []);
+    setEdges((eds) => {
+      const updated = addEdge(connection, eds);
+      setYamlValue(graphToYaml(nodes, updated));
+      return updated;
+    });
+  }, [nodes]);
 
   return (
     <div className="app-container">
@@ -87,3 +103,4 @@ function App() {
 }
 
 export default App;
+

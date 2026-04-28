@@ -5,7 +5,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+asyncpg://cicd_admin:cicd_secret_2026@localhost:5432/cicd_platform",
+    "sqlite+aiosqlite:///./cicd_platform.db",
 )
 
 engine = create_async_engine(DATABASE_URL, echo=False, future=True)

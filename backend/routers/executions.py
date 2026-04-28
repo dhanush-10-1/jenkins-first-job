@@ -1,7 +1,6 @@
 """Execution and Job router — trigger runs, view logs, stream results."""
-import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,7 +42,7 @@ def _determine_pipeline_type(pipeline: Pipeline) -> str:
     status_code=status.HTTP_201_CREATED,
 )
 async def trigger_execution(
-    pipeline_id: uuid.UUID,
+    pipeline_id: str,
     data: ExecutionCreate | None = None,
     db: AsyncSession = Depends(get_db),
 ):
@@ -88,7 +87,7 @@ async def trigger_execution(
 
 @router.get("/executions", response_model=list[ExecutionResponse])
 async def list_executions(
-    pipeline_id: uuid.UUID | None = Query(None),
+    pipeline_id: str | None = Query(None),
     status_filter: str | None = Query(None, alias="status"),
     limit: int = Query(50, le=200),
     db: AsyncSession = Depends(get_db),
@@ -106,7 +105,7 @@ async def list_executions(
 # ── Get execution detail + jobs ───────────────────────────
 
 @router.get("/executions/{execution_id}", response_model=ExecutionDetail)
-async def get_execution(execution_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_execution(execution_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Execution)
         .options(selectinload(Execution.jobs), selectinload(Execution.pipeline))
@@ -128,7 +127,7 @@ async def get_execution(execution_id: uuid.UUID, db: AsyncSession = Depends(get_
 # ── Get execution logs (job stdout) ───────────────────────
 
 @router.get("/executions/{execution_id}/logs")
-async def get_execution_logs(execution_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_execution_logs(execution_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Job)
         .where(Job.execution_id == execution_id)
@@ -150,13 +149,11 @@ async def get_execution_logs(execution_id: uuid.UUID, db: AsyncSession = Depends
     ]
 
 # ── WebSocket log streaming ───────────────────────────────
-from fastapi import WebSocket, WebSocketDisconnect
 
 @router.websocket("/executions/{execution_id}/ws")
-async def websocket_logs(websocket: WebSocket, execution_id: uuid.UUID):
+async def websocket_logs(websocket: WebSocket, execution_id: str):
     await websocket.accept()
     try:
-        # Dummy loop for log streaming
         while True:
             data = await websocket.receive_text()
             await websocket.send_text(f"Received log request for {execution_id}: {data}")
