@@ -3,14 +3,15 @@ import yaml from 'js-yaml';
 import dagre from 'dagre';
 import { Position } from 'reactflow';
 
-const nodeWidth = 200;
-const nodeHeight = 100;
+const nodeWidth = 220;
+const nodeHeight = 110;
 
 export function getLayoutedElements(nodes: Node[], edges: Edge[], direction = 'LR') {
-  const dagreGraph = new dagre.graphlib.Graph();
+  const dagreLib = (dagre as any).default || dagre;
+  const dagreGraph = new dagreLib.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   
-  dagreGraph.setGraph({ rankdir: direction, ranksep: 120, nodesep: 60 });
+  dagreGraph.setGraph({ rankdir: direction, ranksep: 140, nodesep: 70 });
 
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
@@ -20,7 +21,7 @@ export function getLayoutedElements(nodes: Node[], edges: Edge[], direction = 'L
     dagreGraph.setEdge(edge.source, edge.target);
   });
 
-  dagre.layout(dagreGraph);
+  dagreLib.layout(dagreGraph);
 
   return nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
@@ -49,7 +50,7 @@ export function yamlToGraph(yamlString: string): { nodes: Node[]; edges: Edge[] 
         id: key,
         type: 'stageNode',
         position: { x: 0, y: 0 },
-        data: { label: key, type: stage.type || 'build', script: stage.script }
+        data: { label: key, type: stage.type || 'build', script: stage.script || '' }
       });
 
       if (stage.depends_on) {
@@ -70,18 +71,34 @@ export function yamlToGraph(yamlString: string): { nodes: Node[]; edges: Edge[] 
 }
 
 export function graphToYaml(nodes: Node[], edges: Edge[]): string {
-  const doc: any = { name: "Generated Pipeline", stages: {} };
+  const doc: any = { name: "My Pipeline", stages: {} };
   
-  nodes.forEach(node => {
+  // Sort nodes by x position to maintain visual left-to-right ordering in YAML
+  const sorted = [...nodes].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+
+  sorted.forEach(node => {
     const deps = edges.filter(e => e.target === node.id).map(e => e.source);
-    doc.stages[node.id] = {
+    const stageKey = node.data.label || node.id;
+
+    doc.stages[stageKey] = {
       type: node.data.type || 'build',
       script: node.data.script || 'echo "hello"',
     };
     if (deps.length > 0) {
-      doc.stages[node.id].depends_on = deps.length === 1 ? deps[0] : deps;
+      doc.stages[stageKey].depends_on = deps.length === 1 ? deps[0] : deps;
     }
   });
 
   return yaml.dump(doc);
+}
+
+/**
+ * Sanitize a label into a valid YAML key (lowercase, dashes, no spaces).
+ */
+export function sanitizeStageKey(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    || 'stage';
 }
