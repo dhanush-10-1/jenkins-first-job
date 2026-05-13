@@ -1,7 +1,7 @@
 """Execution Logs schema."""
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, ForeignKey, Integer, Float
+from sqlalchemy import String, DateTime, ForeignKey, Integer, Float, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
@@ -30,6 +30,14 @@ class Execution(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+    # ── Priority-related commit metadata ──────────────────────
+    branch_name: Mapped[str] = mapped_column(String(128), default="main")
+    commit_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    files_changed: Mapped[int] = mapped_column(Integer, default=1)
+    changed_files_list: Mapped[list | None] = mapped_column(JSON, nullable=True)  # ["src/auth.py", "tests/test_auth.py"]
+    commit_sha: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    author: Mapped[str | None] = mapped_column(String(128), nullable=True)
 
     # Relationships
     pipeline = relationship("Pipeline", back_populates="executions")

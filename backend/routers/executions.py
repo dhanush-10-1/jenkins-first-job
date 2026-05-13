@@ -63,6 +63,10 @@ async def trigger_execution(
         trigger_type=data.trigger_type,
         trigger_ref=data.trigger_ref,
         total_stages=len(stages),
+        branch_name=pipeline.branch or "main",
+        commit_message="Manual trigger",
+        files_changed=1,
+        author="manual",
     )
     db.add(execution)
     await db.flush()
@@ -75,6 +79,10 @@ async def trigger_execution(
             job_type=job_type,
             status="pending",
             cpu=2 if job_type in ("build", "deploy") else 1,
+            branch_name=pipeline.branch or "main",
+            repo_url=pipeline.repo_url,
+            commit_message="Manual trigger",
+            files_changed=1,
         )
         db.add(job)
 

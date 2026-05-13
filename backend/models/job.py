@@ -1,7 +1,7 @@
 """Job History schema."""
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import String, Text, DateTime, ForeignKey, Integer, Float
+from sqlalchemy import String, Text, DateTime, ForeignKey, Integer, Float, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
 
@@ -36,6 +36,21 @@ class Job(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
+
+    # ── Priority-related metadata (denormalized from execution for fast scheduler queries) ──
+    branch_name: Mapped[str] = mapped_column(String(128), default="main")
+    repo_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    commit_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    files_changed: Mapped[int] = mapped_column(Integer, default=1)
+    changed_files_list: Mapped[list | None] = mapped_column(JSON, nullable=True)  # ["src/auth.py", ...]
+    commit_sha: Mapped[str | None] = mapped_column(String(40), nullable=True)
+
+    # ── Priority breakdown for frontend visualization ──
+    priority_branch: Mapped[float] = mapped_column(Float, default=0.0)
+    priority_jobtype: Mapped[float] = mapped_column(Float, default=0.0)
+    priority_commit: Mapped[float] = mapped_column(Float, default=0.0)
+    priority_aging: Mapped[float] = mapped_column(Float, default=0.0)
+    priority_repo: Mapped[float] = mapped_column(Float, default=0.0)
 
     # Relationships
     execution = relationship("Execution", back_populates="jobs")

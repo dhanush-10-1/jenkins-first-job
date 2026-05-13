@@ -22,6 +22,12 @@ class ExecutionResponse(BaseModel):
     started_at: datetime | None
     completed_at: datetime | None
     created_at: datetime
+    branch_name: str | None = None
+    commit_message: str | None = None
+    files_changed: int | None = None
+    changed_files_list: list[str] | None = None
+    commit_sha: str | None = None
+    author: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -49,6 +55,19 @@ class JobResponse(BaseModel):
     completed_at: datetime | None
     duration_seconds: float | None
     created_at: datetime
+    # Priority metadata
+    branch_name: str | None = None
+    repo_url: str | None = None
+    commit_message: str | None = None
+    files_changed: int | None = None
+    changed_files_list: list[str] | None = None
+    commit_sha: str | None = None
+    # Priority breakdown
+    priority_branch: float = 0.0
+    priority_jobtype: float = 0.0
+    priority_commit: float = 0.0
+    priority_aging: float = 0.0
+    priority_repo: float = 0.0
 
     model_config = {"from_attributes": True}
 

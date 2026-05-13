@@ -10,6 +10,7 @@ import type { Node, Edge, Connection, NodeChange, EdgeChange } from 'reactflow';
 import './index.css';
 
 import { Dashboard } from './components/Dashboard';
+import { RepoManager } from './components/RepoManager';
 
 const initialYaml = `name: My Pipeline
 stages:
@@ -160,6 +161,7 @@ function App() {
         <div className="nav-tabs">
           <button className={activeTab === 'designer' ? 'active' : ''} onClick={() => setActiveTab('designer')}>Designer</button>
           <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>Dashboard</button>
+          <button className={activeTab === 'repos' ? 'active' : ''} onClick={() => setActiveTab('repos')}>Repos</button>
         </div>
       </div>
       <div className="content">
@@ -182,8 +184,10 @@ function App() {
               <YamlEditor value={yamlValue} onChange={(v) => setYamlValue(v || '')} />
             </div>
           </>
-        ) : (
+        ) : activeTab === 'dashboard' ? (
           <Dashboard />
+        ) : (
+          <RepoManager />
         )}
       </div>
 
