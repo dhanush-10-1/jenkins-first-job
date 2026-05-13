@@ -42,12 +42,16 @@ async def execute_job_real(job_id: str, worker_id: str, async_session_maker):
         if not job:
             return
 
-        script = f"echo Starting real execution for {job.stage_name} ({job.job_type})..."
+        script = f'echo "Starting real execution for {job.stage_name} ({job.job_type})..."'
         if job.job_type == "test":
-            script += " && echo Running tests... && echo Tests passed!"
+            script += ' && echo "Running tests..." && echo "Tests passed!"'
 
     # Run the stage outside DB session
     status, logs = await executor.run_stage(job.stage_name, script)
+
+    # Simulate real-world execution delay (5 to 12 seconds) so it doesn't finish instantly
+    import random
+    await asyncio.sleep(random.uniform(5, 12))
 
     async with async_session_maker() as session:
         job = await session.get(Job, job_id)
