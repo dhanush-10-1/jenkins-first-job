@@ -10,7 +10,7 @@ from database import get_db
 from models.pipeline import Pipeline
 from models.execution import Execution
 from models.job import Job
-from routers.executions import STAGE_TEMPLATES, DEFAULT_STAGES, _determine_pipeline_type
+from routers.executions import get_pipeline
 
 router = APIRouter(prefix="/api/webhooks", tags=["Webhooks"])
 
@@ -129,8 +129,7 @@ async def github_push_webhook(request: Request, db: AsyncSession = Depends(get_d
 
     triggered = []
     for pipeline in matching:
-        ptype = _determine_pipeline_type(pipeline)
-        stages = STAGE_TEMPLATES.get(ptype, DEFAULT_STAGES)
+        stages = get_pipeline(pipeline.branch)
 
         execution = Execution(
             pipeline_id=pipeline.id,
@@ -244,8 +243,7 @@ async def gitlab_push_webhook(request: Request, db: AsyncSession = Depends(get_d
 
     triggered = []
     for pipeline in matching:
-        ptype = _determine_pipeline_type(pipeline)
-        stages = STAGE_TEMPLATES.get(ptype, DEFAULT_STAGES)
+        stages = get_pipeline(pipeline.branch)
 
         execution = Execution(
             pipeline_id=pipeline.id,

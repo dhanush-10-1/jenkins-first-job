@@ -13,25 +13,21 @@ from schemas.execution import ExecutionCreate, ExecutionResponse, ExecutionDetai
 
 router = APIRouter(prefix="/api", tags=["Executions"])
 
-# ── Stage templates per pipeline type (mirrors the original frontend) ──
-STAGE_TEMPLATES = {
-    "build":    [("Checkout", "build"), ("Install Deps", "build"), ("Compile", "build"), ("Package", "build"), ("Archive Artifacts", "build")],
-    "test":     [("Checkout", "build"), ("Install Deps", "build"), ("Unit Tests", "test"), ("Integration Tests", "test"), ("Coverage Report", "test")],
-    "deploy":   [("Checkout", "build"), ("Build Image", "build"), ("Push Registry", "deploy"), ("Rolling Deploy", "deploy"), ("Health Check", "test"), ("Notify Slack", "deploy")],
-    "lint":     [("Checkout", "build"), ("ESLint", "lint"), ("Prettier Check", "lint"), ("Report", "lint")],
-    "security": [("Checkout", "build"), ("SAST Scan", "security"), ("Dependency Audit", "security"), ("Secret Detection", "security"), ("Compliance Report", "security")],
-}
-
-DEFAULT_STAGES = STAGE_TEMPLATES["build"]
-
-
-def _determine_pipeline_type(pipeline: Pipeline) -> str:
-    """Infer job type from pipeline name or YAML content."""
-    name_lower = (pipeline.name or "").lower()
-    for ptype in ["deploy", "security", "test", "lint", "build"]:
-        if ptype in name_lower:
-            return ptype
-    return "build"
+def get_pipeline(branch: str | None) -> list[tuple[str, str]]:
+    """Determine pipeline stages based on the branch name."""
+    branch = (branch or "").lower()
+    if branch in ["master", "main"]:
+        return [("Build", "build"), ("Test", "test"), ("Deploy", "deploy")]
+    elif branch == "test":
+        return [("Build", "build"), ("Test", "test")]
+    elif branch == "security":
+        return [("Build", "build"), ("Security Scan", "security")]
+    elif branch == "deploy":
+        return [("Build", "build"), ("Deploy", "deploy")]
+    elif branch == "quality":
+        return [("Build", "build"), ("Lint", "lint"), ("Quality Check", "test")]
+    else:
+        return [("Build", "build")]
 
 
 # ── Trigger execution ─────────────────────────────────────
@@ -54,8 +50,7 @@ async def trigger_execution(
     if data is None:
         data = ExecutionCreate()
 
-    ptype = _determine_pipeline_type(pipeline)
-    stages = STAGE_TEMPLATES.get(ptype, DEFAULT_STAGES)
+    stages = get_pipeline(pipeline.branch)
 
     execution = Execution(
         pipeline_id=pipeline.id,

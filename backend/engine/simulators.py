@@ -14,7 +14,7 @@ from sqlalchemy import select
 from models.pipeline import Pipeline
 from models.execution import Execution
 from models.job import Job
-from routers.executions import STAGE_TEMPLATES, DEFAULT_STAGES, _determine_pipeline_type
+from routers.executions import get_pipeline
 from engine.workers import worker_pool
 
 # ═════════════════════════════════════════════════════════════
@@ -424,8 +424,7 @@ async def webhook_simulator(session_maker):
                     session.add(pipeline)
                     await session.flush()
 
-                ptype = _determine_pipeline_type(pipeline)
-                stages = STAGE_TEMPLATES.get(ptype, DEFAULT_STAGES)
+                stages = get_pipeline(pipeline.branch)
 
                 execution = Execution(
                     pipeline_id=pipeline.id,
